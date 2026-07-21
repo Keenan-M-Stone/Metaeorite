@@ -3,6 +3,10 @@
 > A modular C++20 toolkit for translating between spacetime metrics, generalized constitutive relations,
 > and realizable metamaterial geometries.
 
+See [docs/THEORY.ipynb](docs/THEORY.ipynb) for a from-scratch primer, the scientific foundations and citations
+behind each module, SymPy-verified derivations of the key equations, and a full equation ↔ algorithm ↔ code
+mapping (including exactly what remains to be implemented).
+
 ---
 
 ## Overview
@@ -239,3 +243,53 @@ Metaeorite is designed to be
 
 The software emphasizes clear interfaces over monolithic implementations, allowing future algorithms to replace
 existing modules without affecting user workflows.
+
+---
+
+## Implementation
+
+This repository contains a C++20 implementation of the architecture described above.
+
+### Layout
+
+```bash
+modules/core/                 shared vocabulary: Metric, ConstitutiveRelations, IGeometry,
+                              ReconstructionResult<T>, EngineRegistry<Interface>
+modules/metric_to_maxwell/    IMetricToMaxwellEngine + PlaceholderEngine
+modules/maxwell_to_metric/    IMaxwellToMetricEngine + PlaceholderEngine
+modules/maxwell_to_geometry/  IMaxwellToGeometryEngine + PlaceholderEngine
+modules/geometry_to_maxwell/  IGeometryToMaxwellEngine + PlaceholderEngine
+modules/pipeline/             Pipeline orchestrator, wired purely through the interfaces above
+apps/metaeorite_cli/          demo executable exercising the full pipeline
+tests/                        Catch2 unit + integration tests
+```
+
+Each transformation engine is expressed as an abstract interface (`I*Engine`) in `core`'s vocabulary
+(`Metric`, `ConstitutiveRelations`, `IGeometry`). Modules depend only on `core`, never on each other, and are
+composed by `Pipeline` purely via those interfaces (dependency inversion), so a new engine implementation can
+replace `PlaceholderEngine` without touching any other module. `core::EngineRegistry<Interface>` provides a
+string-keyed factory for selecting an implementation at runtime; each module exposes an explicit
+`registerEngines()` function rather than relying on static-initialization tricks.
+
+`PlaceholderEngine` in every module currently implements only the one exactly-known trivial case (flat/Minkowski
+spacetime &harr; vacuum constitutive relations &harr; free space); anything else throws or returns an empty
+`ReconstructionResult` with an explanatory note. This validates the architecture end-to-end ahead of the real
+Plebanski transformation, effective medium theory, and symmetry analysis implementations.
+
+### Dependencies
+
+Fetched automatically at configure time via [CPM.cmake](https://github.com/cpm-cmake/CPM.cmake) &mdash; no manual
+install step required:
+
+- [Eigen](https://eigen.tuxfamily.org) &mdash; rank-2 tensor / linear algebra
+- [xtensor](https://github.com/xtensor-stack/xtensor) &mdash; general N-dimensional tensor storage
+- [Catch2](https://github.com/catchorg/Catch2) &mdash; unit testing
+
+### Building
+
+```sh
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+cmake --build build -j"$(nproc)"
+ctest --test-dir build --output-on-failure
+./build/apps/metaeorite_cli/metaeorite_cli
+```
