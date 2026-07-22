@@ -17,6 +17,7 @@ endif()
 
 option(METAEORITE_BUILD_TESTS "Build unit tests" ON)
 option(METAEORITE_BUILD_APPS "Build example/demo applications" ON)
+option(METAEORITE_BUILD_PYTHON "Build Python bindings (pybind11)" ON)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(cmake/CPM.cmake)
@@ -38,6 +39,11 @@ add_subdirectory(modules/geometry_to_maxwell)
 # interfaces (dependency inversion), mirroring the architecture diagram.
 add_subdirectory(modules/pipeline)
 
+# Function-based facade over the four engines (metric_to_maxwell,
+# maxwell_to_metric, maxwell_to_geometry, geometry_to_maxwell) for external
+# C++ consumers and the Python bindings below.
+add_subdirectory(modules/api)
+
 if(METAEORITE_BUILD_APPS)
   add_subdirectory(apps/metaeorite_cli)
 endif()
@@ -45,4 +51,8 @@ endif()
 if(METAEORITE_BUILD_TESTS)
   enable_testing()
   add_subdirectory(tests)
+endif()
+
+if(METAEORITE_BUILD_PYTHON)
+  add_subdirectory(bindings/python)
 endif()

@@ -51,3 +51,14 @@ if(METAEORITE_BUILD_TESTS)
     GIT_SHALLOW TRUE
   )
 endif()
+
+# pybind11 is fetched with full CMake integration (not DOWNLOAD_ONLY) since
+# it provides the pybind11_add_module() helper used by bindings/python.
+if(METAEORITE_BUILD_PYTHON)
+  CPMAddPackage(
+    NAME pybind11
+    GITHUB_REPOSITORY pybind/pybind11
+    GIT_TAG v2.13.6
+    GIT_SHALLOW TRUE
+  )
+endif()

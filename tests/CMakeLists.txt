@@ -3,12 +3,14 @@ add_executable(metaeorite_tests
     core/TestRegistry.cpp
     engines/TestPlaceholderEngines.cpp
     pipeline/TestPipeline.cpp
+    api/TestApiFunctions.cpp
 )
 
 target_link_libraries(metaeorite_tests PRIVATE
     Catch2::Catch2WithMain
     metaeorite::core
     metaeorite::pipeline
+    metaeorite::api
     metaeorite::metric_to_maxwell
     metaeorite::maxwell_to_metric
     metaeorite::maxwell_to_geometry

@@ -278,8 +278,8 @@ Plebanski transformation, effective medium theory, and symmetry analysis impleme
 
 ### Dependencies
 
-Fetched automatically at configure time via [CPM.cmake](https://github.com/cpm-cmake/CPM.cmake) &mdash; no manual
-install step required:
+Fetched automatically at configure time via [CPM.cmake](https://github.com/cpm-cmake/CPM.cmake) &mdash;  
+no manual install step required:
 
 - [Eigen](https://eigen.tuxfamily.org) &mdash; rank-2 tensor / linear algebra
 - [xtensor](https://github.com/xtensor-stack/xtensor) &mdash; general N-dimensional tensor storage
