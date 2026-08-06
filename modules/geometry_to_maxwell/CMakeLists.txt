@@ -1,5 +1,6 @@
 add_library(metaeorite_geometry_to_maxwell
     src/PlaceholderEngine.cpp
+    src/RadialLaminateEngine.cpp
     src/Registration.cpp
 )
 add_library(metaeorite::geometry_to_maxwell ALIAS metaeorite_geometry_to_maxwell)

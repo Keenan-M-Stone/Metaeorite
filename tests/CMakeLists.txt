@@ -4,6 +4,7 @@ add_executable(metaeorite_tests
     core/TestSymmetryClassifier.cpp
     engines/TestPlaceholderEngines.cpp
     engines/TestTransformationOptics.cpp
+    engines/TestOtherModules.cpp
     pipeline/TestPipeline.cpp
     api/TestApiFunctions.cpp
 )

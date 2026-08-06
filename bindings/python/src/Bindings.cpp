@@ -134,6 +134,11 @@ PYBIND11_MODULE(_metaeorite_native, m) {
     py::class_<core::NullGeometry, core::IGeometry, std::shared_ptr<core::NullGeometry>>(m, "NullGeometry")
         .def(py::init<>());
 
+    py::class_<core::RadialLaminateGeometry, core::IGeometry, std::shared_ptr<core::RadialLaminateGeometry>>(
+        m, "RadialLaminateGeometry")
+        .def(py::init<double, double>(), py::arg("filling_fraction"), py::arg("layer_period"))
+        .def("filling_fraction", &core::RadialLaminateGeometry::fillingFraction);
+
     using MetricResult = core::ReconstructionResult<core::Metric>;
     py::class_<MetricResult::Candidate>(m, "MetricCandidate")
         .def_readonly("value", &MetricResult::Candidate::value)

@@ -8,8 +8,10 @@ behind each module, SymPy-verified derivations of the key equations, and a full 
 mapping (including exactly what remains to be implemented).
 
 See [docs/CloakValidation.ipynb](docs/CloakValidation.ipynb) for an end-to-end demonstration: validating this
-toolkit against a well-known published result (the Pendry–Schurig–Smith cylindrical invisibility cloak),
-parallelized with `dask.distributed`, with human-readable JSON export and sketched MEEP/EinsteinPy interoperability.
+toolkit's four transformation modules (`metric_to_maxwell`, `maxwell_to_metric`, `maxwell_to_geometry`,
+`geometry_to_maxwell`) against a well-known published result (the Pendry–Schurig–Smith cylindrical invisibility
+cloak), parallelized with `dask.distributed`, with human-readable JSON export and sketched MEEP/EinsteinPy
+interoperability.
 
 ---
 
@@ -290,6 +292,32 @@ string-keyed factory for selecting an implementation at runtime; each module exp
 spacetime &harr; vacuum constitutive relations &harr; free space); anything else throws or returns an empty
 `ReconstructionResult` with an explanatory note. This validates the architecture end-to-end ahead of the real
 Plebanski transformation, effective medium theory, and symmetry analysis implementations.
+
+Beyond the vacuum baseline, each module also ships a real, non-placeholder engine validated against the
+published Pendry&ndash;Schurig&ndash;Smith cylindrical cloak (see
+[docs/CloakValidation.ipynb](docs/CloakValidation.ipynb) for the full worked demonstration of all four):
+
+- **`metric_to_maxwell`** &mdash; `transformation_optics_constitutive`: the standard transformation-optics
+  formula $\varepsilon' = \mu' = (\Lambda\Lambda^\mathsf{T})/\det(\Lambda)$ for an orthonormal-frame Jacobian
+  $\Lambda$, exposed as a free function (not registry-selected) plus `cylindricalCloakJacobian` for this test
+  case specifically. Validated to floating-point precision against the closed-form cloak parameters.
+- **`maxwell_to_metric`** &mdash; `"transformation-optics"` engine: inverts the above for diagonal,
+  impedance-matched ($\varepsilon=\mu$) input via $g_{ii} = \varepsilon_{ii}/\det(\varepsilon)$. Rejects
+  (returns an empty result with notes) non-diagonal, complex, or non-impedance-matched input rather than
+  guessing. **Scope**: this closed-form inverse only holds for diagonal $\Lambda$; the general (non-orthonormal,
+  time-space-mixing) Plebanski inverse remains future work.
+- **`maxwell_to_geometry`** / **`geometry_to_maxwell`** &mdash; `"radial-laminate"` engine (both directions):
+  synthesizes/homogenizes a concentric-shell laminate of two isotropic dielectrics using classical Wiener-bounds
+  effective-medium theory (arithmetic mean tangential to the layers, harmonic mean perpendicular to them), per
+  Cai, Chettiar, Kildishev & Shalaev, ["Optical cloaking with
+  metamaterials"](https://doi.org/10.1038/nphoton.2007.28), *Nature Photonics* **1**, 224 (2007). The filling
+  fraction is solved to match the tangential ($\varepsilon_\phi$) target exactly. **Scope/limitations, stated
+  explicitly rather than silently ignored**: a single filling fraction cannot simultaneously match both Wiener
+  bounds, so the radial ($\varepsilon_r$) component is only approximate (confidence-scored, not silently
+  accepted); the axial ($\varepsilon_z$) component is not properly modeled by this 2D radial-laminate approach
+  (approximated equal to the tangential value); and targets requiring a permittivity outside the achievable
+  range of the chosen material pair (e.g. near the cloak's inner-boundary coordinate singularity) are correctly
+  rejected rather than extrapolated.
 
 ### Dependencies
 

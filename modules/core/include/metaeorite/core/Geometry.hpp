@@ -45,4 +45,32 @@ private:
     UnitCellDescriptor unitCell_{};
 };
 
+/// A radially-layered laminate: alternating thin shells of two isotropic
+/// dielectrics, with `fillingFraction` the fraction occupied by the first
+/// material. Structural-only (the two materials' permittivities are
+/// supplied separately as MaterialProperties/engine parameters at
+/// homogenization/synthesis time, not stored here), so the same geometry
+/// can be re-homogenized against different material choices. See
+/// core::LaminateEffectiveMedium for the mixing formulas used to realize
+/// and homogenize this geometry against a target anisotropic medium (e.g.
+/// the cylindrical invisibility cloak's radial/tangential permittivities).
+class RadialLaminateGeometry final : public IGeometry {
+public:
+    RadialLaminateGeometry(double fillingFraction, double layerPeriod) : fillingFraction_(fillingFraction) {
+        unitCell_.latticeConstants = {layerPeriod, layerPeriod};
+        unitCell_.symmetryGroup = "radial-laminate";
+    }
+
+    [[nodiscard]] std::string describe() const override {
+        return "radial-laminate-geometry (filling fraction = " + std::to_string(fillingFraction_) + ")";
+    }
+    [[nodiscard]] unsigned dimension() const override { return 2; }
+    [[nodiscard]] const UnitCellDescriptor& unitCell() const override { return unitCell_; }
+    [[nodiscard]] double fillingFraction() const noexcept { return fillingFraction_; }
+
+private:
+    double fillingFraction_;
+    UnitCellDescriptor unitCell_{};
+};
+
 } // namespace metaeorite::core

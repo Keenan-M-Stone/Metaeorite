@@ -1,6 +1,7 @@
 add_library(metaeorite_maxwell_to_metric
     src/PlaceholderEngine.cpp
     src/Registration.cpp
+    src/TransformationOpticsMetricEngine.cpp
 )
 add_library(metaeorite::maxwell_to_metric ALIAS metaeorite_maxwell_to_metric)
 
