@@ -32,10 +32,12 @@ from ._metaeorite_native import (
     UnitCellDescriptor,
     __version__,
     available_engines,
+    cylindrical_cloak_jacobian,
     geometry_to_maxwell,
     maxwell_to_geometry,
     maxwell_to_metric,
     metric_to_maxwell,
+    transformation_optics_constitutive,
 )
 
 __all__ = [
@@ -54,8 +56,10 @@ __all__ = [
     "UnitCellDescriptor",
     "__version__",
     "available_engines",
+    "cylindrical_cloak_jacobian",
     "geometry_to_maxwell",
     "maxwell_to_geometry",
     "maxwell_to_metric",
     "metric_to_maxwell",
+    "transformation_optics_constitutive",
 ]

@@ -25,6 +25,7 @@
 #include "metaeorite/api/Functions.hpp"
 #include "metaeorite/core/CoordinateSystem.hpp"
 #include "metaeorite/core/Version.hpp"
+#include "metaeorite/metric_to_maxwell/TransformationOptics.hpp"
 
 namespace py = pybind11;
 using namespace metaeorite;
@@ -183,4 +184,15 @@ PYBIND11_MODULE(_metaeorite_native, m) {
             return result;
         },
         "Dict mapping each transformation category to its list of registered engine ids.");
+
+    // Jacobian-based transformation-optics utilities (Pendry, Schurig & Smith,
+    // Opt. Express 14, 9794 (2006)) validated against the published
+    // cylindrical cloak in tests/engines/TestTransformationOptics.cpp; see
+    // metaeorite/metric_to_maxwell/TransformationOptics.hpp for scope notes.
+    m.def("transformation_optics_constitutive", &metric_to_maxwell::transformationOpticsConstitutive,
+          py::arg("jacobian"), py::arg("background_epsilon") = 1.0, py::arg("background_mu") = 1.0,
+          "Constitutive relations epsilon = mu = (J J^T) / det(J) for a spatial coordinate Jacobian J.");
+    m.def("cylindrical_cloak_jacobian", &metric_to_maxwell::cylindricalCloakJacobian, py::arg("r"),
+          py::arg("inner_radius"), py::arg("outer_radius"),
+          "Orthonormal-frame Jacobian of the canonical cylindrical invisibility cloak at radius r.");
 }

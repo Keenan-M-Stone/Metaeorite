@@ -52,9 +52,29 @@ if(METAEORITE_BUILD_TESTS)
   )
 endif()
 
+# spglib provides crystal point-/space-group symmetry search (BSD-3-Clause),
+# used by metaeorite::core's SymmetryClassifier so that maxwell_to_geometry /
+# geometry_to_maxwell can classify unit-cell symmetry without reimplementing
+# crystallographic symmetry detection from scratch. Fetched with its own
+# CMake integration (not DOWNLOAD_ONLY) since it is a compiled C library;
+# its tests/install steps are disabled since we only need Spglib::symspg.
+CPMAddPackage(
+  NAME Spglib
+  GITHUB_REPOSITORY spglib/spglib
+  GIT_TAG v2.7.0
+  GIT_SHALLOW TRUE
+  OPTIONS
+    "SPGLIB_SHARED_LIBS OFF"
+    "SPGLIB_WITH_TESTS OFF"
+    "SPGLIB_INSTALL OFF"
+)
+
 # pybind11 is fetched with full CMake integration (not DOWNLOAD_ONLY) since
 # it provides the pybind11_add_module() helper used by bindings/python.
 if(METAEORITE_BUILD_PYTHON)
+  # Use modern FindPython to avoid ABI mismatches when multiple Python
+  # installations are present (e.g. base conda + project env).
+  set(PYBIND11_FINDPYTHON ON)
   CPMAddPackage(
     NAME pybind11
     GITHUB_REPOSITORY pybind/pybind11

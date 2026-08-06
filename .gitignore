@@ -1,0 +1,19 @@
+build/
+build*/
+out/
+.cache/
+compile_commands.json
+CMakeFiles/
+CMakeCache.txt
+*.o
+*.obj
+.vscode/
+.vs/
+
+# Python bindings extension compiled by bindings/python/CMakeLists.txt
+# directly into the package directory - do not commit build artifacts.
+bindings/python/metaeorite/_metaeorite_native*
+bindings/python/metaeorite/__pycache__/
+**/__pycache__/
+*.egg-info/
+

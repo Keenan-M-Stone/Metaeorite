@@ -7,8 +7,16 @@ if(NOT Python3_FOUND)
   return()
 endif()
 
-pybind11_add_module(_metaeorite_native src/Bindings.cpp)
-target_link_libraries(_metaeorite_native PRIVATE metaeorite::api metaeorite::core)
+# Build the extension with the ABI tag of the selected Python3 interpreter
+# (passed from the top-level configure via -DPython3_EXECUTABLE=...), so the
+# generated filename is importable by that exact runtime.
+Python3_add_library(_metaeorite_native MODULE WITH_SOABI src/Bindings.cpp)
+target_link_libraries(_metaeorite_native PRIVATE
+  Python3::Module
+  pybind11::headers
+  metaeorite::api
+  metaeorite::core
+)
 target_compile_features(_metaeorite_native PRIVATE cxx_std_20)
 
 # Land the compiled extension right next to the pure-Python package so that

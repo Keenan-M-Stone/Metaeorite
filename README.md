@@ -7,6 +7,10 @@ See [docs/THEORY.ipynb](docs/THEORY.ipynb) for a from-scratch primer, the scient
 behind each module, SymPy-verified derivations of the key equations, and a full equation ↔ algorithm ↔ code
 mapping (including exactly what remains to be implemented).
 
+See [docs/CloakValidation.ipynb](docs/CloakValidation.ipynb) for an end-to-end demonstration: validating this
+toolkit against a well-known published result (the Pendry–Schurig–Smith cylindrical invisibility cloak),
+parallelized with `dask.distributed`, with human-readable JSON export and sketched MEEP/EinsteinPy interoperability.
+
 ---
 
 ## Overview
@@ -73,6 +77,14 @@ Output
 - Magnetoelectric coupling tensors (ξ, ζ)
 - Generalized Maxwell formulation
 
+`metric_to_maxwell::transformationOpticsConstitutive` implements the spatial-only, orthonormal-frame
+specialization of this correspondence (ε′ = μ′ = (Λ Λᵀ)/det Λ for a coordinate Jacobian Λ), validated against
+the published closed-form [Pendry–Schurig–Smith cylindrical cloak](https://doi.org/10.1126/science.1126493) in
+[tests/engines/TestTransformationOptics.cpp](tests/engines/TestTransformationOptics.cpp) and demonstrated end-to-end
+(with `dask.distributed` parallelization, JSON export, and MEEP/EinsteinPy interoperability sketches) in
+[docs/CloakValidation.ipynb](docs/CloakValidation.ipynb). The fully general `Metric`-input engine (arbitrary
+coordinate bases, time-space mixing) is still future work.
+
 ---
 
 ### 2. Maxwell → Metric
@@ -124,6 +136,9 @@ Output
 - Fabrication parameters
 - CAD geometry
 
+`core::classifySymmetry` (backed by [spglib](https://github.com/spglib/spglib)) provides the symmetry-analysis
+step as a reusable utility; wiring it into a concrete synthesis engine is still future work.
+
 ---
 
 #### 4. Geometry → Maxwell
@@ -140,7 +155,7 @@ Input
 Output
 
 - Effective constitutive tensors
-- Symmetry classification
+- Symmetry classification (`core::classifySymmetry`, backed by [spglib](https://github.com/spglib/spglib))
 - Homogenized Maxwell equations
 
 ---
@@ -281,9 +296,39 @@ Plebanski transformation, effective medium theory, and symmetry analysis impleme
 Fetched automatically at configure time via [CPM.cmake](https://github.com/cpm-cmake/CPM.cmake) &mdash;  
 no manual install step required:
 
-- [Eigen](https://eigen.tuxfamily.org) &mdash; rank-2 tensor / linear algebra
-- [xtensor](https://github.com/xtensor-stack/xtensor) &mdash; general N-dimensional tensor storage
-- [Catch2](https://github.com/catchorg/Catch2) &mdash; unit testing
+| Package | License | Used by | Why |
+| --- | --- | --- | --- |
+| [Eigen](https://eigen.tuxfamily.org) | MPL2 | `core` | Rank-2 tensor / linear algebra (constitutive tensors, coordinate transforms). |
+| [xtensor](https://github.com/xtensor-stack/xtensor) (+ [xtl](https://github.com/xtensor-stack/xtl)) | BSD-3-Clause | `core` | General N-dimensional tensor storage for `Metric` components of arbitrary dimension. |
+| [spglib](https://github.com/spglib/spglib) | BSD-3-Clause | `core` (`SymmetryClassifier`) | Crystal point-/space-group symmetry search, so `maxwell_to_geometry` / `geometry_to_maxwell` can classify unit-cell symmetry without reimplementing crystallographic symmetry detection from scratch. Linked privately; no public header depends on it. |
+| [pybind11](https://github.com/pybind/pybind11) | BSD-3-Clause | `bindings/python` | Exposes the `metaeorite::api` C++ facade as the importable `metaeorite` Python package. |
+| [Catch2](https://github.com/catchorg/Catch2) | BSL-1.0 | `tests` | Unit testing. |
+
+Every dependency here is used to avoid re-implementing well-solved, general-purpose infrastructure (linear
+algebra, tensor storage, symmetry search, Python bindings, testing) so this repository's own code can stay
+focused on the novel part: the metric &harr; constitutive-relations &harr; geometry translation logic itself.
+Domain-specific tools that overlap with adjacent fields &mdash; CAD kernels, full electromagnetic simulators,
+general-relativity simulators &mdash; are deliberately **not** dependencies, since providing those is out of
+scope for this project (see [Overview](#overview)); a downstream user is expected to pair this library's output
+with such tools themselves.
+
+#### Notebook / Python-side dependencies
+
+[docs/CloakValidation.ipynb](docs/CloakValidation.ipynb) additionally uses these packages (installed separately
+in the Python environment used to run the notebook &mdash; they are **not** required to build or use the core
+C++ library or its Python bindings):
+
+| Package | License | Why |
+| --- | --- | --- |
+| [dask](https://www.dask.org) / [distributed](https://distributed.dask.org) | BSD-3-Clause | Parallelizes the cloak-validation grid sweep across a resource-capped local cluster, demonstrating how larger/more expensive sweeps (finer grids, dispersive frequency sweeps) would scale. |
+| [psutil](https://github.com/giampaolo/psutil) | BSD-3-Clause | Detects available CPU/RAM at run time so the Dask `LocalCluster` is sized conservatively for the host machine instead of assuming fixed resources. |
+| [matplotlib](https://matplotlib.org) | PSF-based (BSD-style) | Plots the validated cloak parameters against the published closed form. |
+| [EinsteinPy](https://einsteinpy.org) | MIT | Sketches the GR-side interoperability path (symbolic flatness check of the virtual-space background metric). |
+| [MEEP](https://meep.readthedocs.io) (optional) | GPL-2.0 | Sketches the EM-FDTD interoperability path (radial permittivity profile as a MEEP material function); the notebook runs without it installed and prints the equivalent code instead. |
+
+No new C++ JSON dependency was added for the notebook's human-readable/interoperable I/O: `ConstitutiveRelations`'
+`epsilon`/`mu`/`xi`/`zeta` are already exposed as NumPy complex arrays via the existing pybind11 bindings
+(`pybind11/eigen.h` + `pybind11/complex.h`), so JSON export/import is built entirely in Python from those.
 
 ### Building
 
