@@ -139,7 +139,10 @@ Output
 - CAD geometry
 
 `core::classifySymmetry` (backed by [spglib](https://github.com/spglib/spglib)) provides the symmetry-analysis
-step as a reusable utility; wiring it into a concrete synthesis engine is still future work.
+step as a reusable utility; wiring it into a concrete synthesis engine is still future work, but
+[docs/CloakValidation.ipynb](docs/CloakValidation.ipynb) demonstrates it directly as a downstream analysis step
+on the `radial-laminate` engine's synthesized/input geometries (a real point-group classification of a concrete
+lattice + basis, not a placeholder).
 
 ---
 
@@ -183,6 +186,37 @@ Future versions will support
 - nonlinear media
 - dispersive materials
 - time-varying media
+
+---
+
+## Hierarchical Synthesis (planned)
+
+A `maxwell_to_geometry` synthesis engine's constituent materials (e.g. `radial-laminate`'s host/inclusion) are
+themselves just scalar permittivities supplied by the caller - they are not guaranteed to correspond to a single
+real, off-the-shelf material. When one doesn't, that constituent's assumed permittivity can be treated as a
+*target* for another synthesis call, recursively, using a different (more fundamental) constituent pair, until
+every constituent at the deepest level is realizable. Design principles for this workflow:
+
+- **No automatic recursion, no materials database.** Metaeorite will not decide for the user whether a given
+  permittivity is "real" - the user drives the loop themselves, calling the same functions repeatedly.
+- **The existing `ReconstructionResult::empty()` rejection mechanism *is* the termination signal.** It already
+  rejects targets unrealizable by the chosen constituent pair (e.g. near the cloak's coordinate singularity -
+  see `maxwell_to_geometry`'s scope notes above). A user's recursive loop simply stops descending, keeping the
+  last successful level, when the next level's call returns empty.
+- **Recurse into a constituent slot, not into a level's own effective tensor.** Re-homogenizing a geometry with
+  `geometry_to_maxwell` and feeding that tensor straight back into `maxwell_to_geometry` is a fixed point (it
+  reproduces the same geometry) and does not descend a level. The meaningful next-level target is one of the
+  *constituent's* assumed scalar permittivities (host or inclusion), promoted to an isotropic constitutive
+  target via `core::ConstitutiveRelations::isotropic(epsilon)`.
+- **Per-call, not per-`engine_id`, constituent parameters.** The `"radial-laminate"` `maxwell_to_geometry` engine
+  is additionally exposed as a directly-callable, parameterized free function,
+  `maxwell_to_geometry::synthesizeRadialLaminate(constitutive, hostEpsilon, inclusionEpsilon, layerPeriod)`
+  (`mo.synthesize_radial_laminate(...)` in Python), so each recursion level can use a different constituent pair
+  instead of being locked to the `engine_id` registry's fixed-at-registration-time defaults.
+- The unit cell at whichever level the recursion successfully terminates at is sufficient on its own for
+  full-wave (e.g. FDTD + periodic boundary conditions) dispersion sampling - there is no need to additionally
+  isolate or render the bare meta-atom, since by construction that unit cell already only contains real,
+  physically obtainable constituents.
 
 ---
 

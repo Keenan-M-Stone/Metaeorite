@@ -24,6 +24,7 @@
 
 #include "metaeorite/api/Functions.hpp"
 #include "metaeorite/core/CoordinateSystem.hpp"
+#include "metaeorite/core/SymmetryClassifier.hpp"
 #include "metaeorite/core/Version.hpp"
 #include "metaeorite/metric_to_maxwell/TransformationOptics.hpp"
 
@@ -200,4 +201,22 @@ PYBIND11_MODULE(_metaeorite_native, m) {
     m.def("cylindrical_cloak_jacobian", &metric_to_maxwell::cylindricalCloakJacobian, py::arg("r"),
           py::arg("inner_radius"), py::arg("outer_radius"),
           "Orthonormal-frame Jacobian of the canonical cylindrical invisibility cloak at radius r.");
+
+    // Standalone spglib-backed symmetry analysis (core::classifySymmetry); not yet consumed by any
+    // engine internally (see README/THEORY.ipynb), but usable directly on a geometry's unit cell.
+    py::class_<core::LatticeBasis>(m, "LatticeBasis")
+        .def(py::init<>())
+        .def_readwrite("lattice_vectors", &core::LatticeBasis::latticeVectors)
+        .def_readwrite("fractional_positions", &core::LatticeBasis::fractionalPositions)
+        .def_readwrite("atom_types", &core::LatticeBasis::atomTypes);
+
+    py::class_<core::SymmetryClassification>(m, "SymmetryClassification")
+        .def_readonly("point_group", &core::SymmetryClassification::pointGroup)
+        .def_readonly("irreducible_representations", &core::SymmetryClassification::irreducibleRepresentations)
+        .def("__repr__", [](const core::SymmetryClassification& c) {
+            return "SymmetryClassification(point_group='" + c.pointGroup + "')";
+        });
+
+    m.def("classify_symmetry", &core::classifySymmetry, py::arg("lattice"), py::arg("symprec") = 1e-5,
+          "Point-group symmetry of a lattice + atomic basis, via spglib.");
 }
