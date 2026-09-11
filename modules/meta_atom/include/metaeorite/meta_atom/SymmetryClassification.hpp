@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-namespace metaeorite::core {
+namespace metaeorite::meta_atom {
 
 /// Point-group / representation-theoretic classification of a geometry's
 /// symmetry, used to constrain admissible constitutive tensors. Populated
@@ -13,4 +13,4 @@ struct SymmetryClassification {
     std::vector<std::string> irreducibleRepresentations;
 };
 
-} // namespace metaeorite::core
+} // namespace metaeorite::meta_atom

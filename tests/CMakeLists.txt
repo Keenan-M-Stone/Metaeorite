@@ -1,7 +1,7 @@
 add_executable(metaeorite_tests
     core/TestCoreTypes.cpp
     core/TestRegistry.cpp
-    core/TestSymmetryClassifier.cpp
+    meta_atom/TestSymmetryClassifier.cpp
     engines/TestPlaceholderEngines.cpp
     engines/TestTransformationOptics.cpp
     engines/TestOtherModules.cpp
@@ -12,6 +12,7 @@ add_executable(metaeorite_tests
 target_link_libraries(metaeorite_tests PRIVATE
     Catch2::Catch2WithMain
     metaeorite::core
+    metaeorite::meta_atom
     metaeorite::pipeline
     metaeorite::api
     metaeorite::metric_to_maxwell

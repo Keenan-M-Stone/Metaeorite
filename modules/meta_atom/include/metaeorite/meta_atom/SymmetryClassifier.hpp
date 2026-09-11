@@ -3,9 +3,9 @@
 #include <array>
 #include <vector>
 
-#include "metaeorite/core/SymmetryClassification.hpp"
+#include "metaeorite/meta_atom/SymmetryClassification.hpp"
 
-namespace metaeorite::core {
+namespace metaeorite::meta_atom {
 
 /// Periodic lattice + atomic basis, expressed in the 3-lattice-vector /
 /// fractional-coordinate convention expected by spglib. Planar (2D) unit
@@ -22,8 +22,8 @@ struct LatticeBasis {
 /// Classifies the point-/space-group symmetry of a lattice + basis using
 /// spglib (https://github.com/spglib/spglib, BSD-3-Clause), rather than
 /// reimplementing crystallographic symmetry search from scratch. Backs the
-/// symmetry-analysis step of `maxwell_to_geometry` / `geometry_to_maxwell`
-/// once those engines gain real geometry backends.
+/// symmetry/meta-atom-structure analysis step of `maxwell_to_geometry` /
+/// `geometry_to_maxwell` once those engines gain real geometry backends.
 ///
 /// `SymmetryClassification::irreducibleRepresentations` is intentionally
 /// left empty: spglib reports space/point groups only, not irreducible
@@ -31,4 +31,4 @@ struct LatticeBasis {
 /// work built on top of this classification.
 [[nodiscard]] SymmetryClassification classifySymmetry(const LatticeBasis& lattice, double symprec = 1e-5);
 
-} // namespace metaeorite::core
+} // namespace metaeorite::meta_atom

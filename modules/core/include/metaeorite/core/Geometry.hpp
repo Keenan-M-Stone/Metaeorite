@@ -73,4 +73,29 @@ private:
     UnitCellDescriptor unitCell_{};
 };
 
+/// A planar (Cartesian) laminate: alternating thin slabs of two isotropic
+/// dielectrics stacked along one Cartesian axis, with `fillingFraction`
+/// the fraction occupied by the first material. Sibling of
+/// RadialLaminateGeometry for macroscopic configurations without
+/// cylindrical symmetry (e.g. flat metasurfaces, planar GRIN devices);
+/// see core::LaminateEffectiveMedium for the shared mixing formulas.
+class PlanarLaminateGeometry final : public IGeometry {
+public:
+    PlanarLaminateGeometry(double fillingFraction, double layerPeriod) : fillingFraction_(fillingFraction) {
+        unitCell_.latticeConstants = {layerPeriod, layerPeriod};
+        unitCell_.symmetryGroup = "planar-laminate";
+    }
+
+    [[nodiscard]] std::string describe() const override {
+        return "planar-laminate-geometry (filling fraction = " + std::to_string(fillingFraction_) + ")";
+    }
+    [[nodiscard]] unsigned dimension() const override { return 2; }
+    [[nodiscard]] const UnitCellDescriptor& unitCell() const override { return unitCell_; }
+    [[nodiscard]] double fillingFraction() const noexcept { return fillingFraction_; }
+
+private:
+    double fillingFraction_;
+    UnitCellDescriptor unitCell_{};
+};
+
 } // namespace metaeorite::core

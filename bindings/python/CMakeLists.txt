@@ -16,6 +16,7 @@ target_link_libraries(_metaeorite_native PRIVATE
   pybind11::headers
   metaeorite::api
   metaeorite::core
+  metaeorite::meta_atom
 )
 target_compile_features(_metaeorite_native PRIVATE cxx_std_20)
 

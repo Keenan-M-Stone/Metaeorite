@@ -138,11 +138,19 @@ Output
 - Fabrication parameters
 - CAD geometry
 
-`core::classifySymmetry` (backed by [spglib](https://github.com/spglib/spglib)) provides the symmetry-analysis
+`meta_atom::classifySymmetry` (backed by [spglib](https://github.com/spglib/spglib)) provides the symmetry-analysis
 step as a reusable utility; wiring it into a concrete synthesis engine is still future work, but
 [docs/CloakValidation.ipynb](docs/CloakValidation.ipynb) demonstrates it directly as a downstream analysis step
 on the `radial-laminate` engine's synthesized/input geometries (a real point-group classification of a concrete
 lattice + basis, not a placeholder).
+
+Genericity across macroscopic configurations comes from this module's `IMaxwellToGeometryEngine` interface and
+`engine_id` registry, not from any single engine trying to cover every topology: `radial-laminate` (concentric
+dielectric shells, validated against the cylindrical cloak) and `planar-laminate` (a Cartesian flat-stack
+sibling using the same `core::LaminateEffectiveMedium` mixing formulas but a different index convention) are two
+independent, topology-specific engines registered side by side. Adding support for another macroscopic
+configuration (e.g. spherical shells, wire-grid arrays) means registering a new engine, not generalizing an
+existing one.
 
 ---
 
@@ -160,8 +168,12 @@ Input
 Output
 
 - Effective constitutive tensors
-- Symmetry classification (`core::classifySymmetry`, backed by [spglib](https://github.com/spglib/spglib))
+- Symmetry classification (`meta_atom::classifySymmetry`, backed by [spglib](https://github.com/spglib/spglib))
 - Homogenized Maxwell equations
+
+Mirrors `maxwell_to_geometry`'s engine-per-topology structure: `radial-laminate` and `planar-laminate` are each
+registered here too, so a geometry synthesized by one direction's engine can be homogenized back by its
+counterpart of the same name.
 
 ---
 
@@ -306,6 +318,8 @@ This repository contains a C++20 implementation of the architecture described ab
 ```bash
 modules/core/                 shared vocabulary: Metric, ConstitutiveRelations, IGeometry,
                               ReconstructionResult<T>, EngineRegistry<Interface>
+modules/meta_atom/            meta-atom structure & symmetry-group determination: LatticeBasis,
+                              SymmetryClassification, classifySymmetry (spglib-backed)
 modules/metric_to_maxwell/    IMetricToMaxwellEngine + PlaceholderEngine
 modules/maxwell_to_metric/    IMaxwellToMetricEngine + PlaceholderEngine
 modules/maxwell_to_geometry/  IMaxwellToGeometryEngine + PlaceholderEngine
@@ -352,6 +366,11 @@ published Pendry&ndash;Schurig&ndash;Smith cylindrical cloak (see
   (approximated equal to the tangential value); and targets requiring a permittivity outside the achievable
   range of the chosen material pair (e.g. near the cloak's inner-boundary coordinate singularity) are correctly
   rejected rather than extrapolated.
+- **`maxwell_to_geometry`** / **`geometry_to_maxwell`** &mdash; `"planar-laminate"` engine (both directions):
+  the same Wiener-bounds mixing formulas applied to a Cartesian flat-stack instead of a concentric-shell
+  topology (arithmetic mean in-plane, harmonic mean along the stack normal). Not tied to the cylindrical cloak
+  or its `(r, φ, z)` index convention; exists to demonstrate that other macroscopic configurations are added as
+  independent sibling engines rather than by generalizing `"radial-laminate"` itself.
 
 ### Dependencies
 
@@ -362,7 +381,7 @@ no manual install step required:
 | --- | --- | --- | --- |
 | [Eigen](https://eigen.tuxfamily.org) | MPL2 | `core` | Rank-2 tensor / linear algebra (constitutive tensors, coordinate transforms). |
 | [xtensor](https://github.com/xtensor-stack/xtensor) (+ [xtl](https://github.com/xtensor-stack/xtl)) | BSD-3-Clause | `core` | General N-dimensional tensor storage for `Metric` components of arbitrary dimension. |
-| [spglib](https://github.com/spglib/spglib) | BSD-3-Clause | `core` (`SymmetryClassifier`) | Crystal point-/space-group symmetry search, so `maxwell_to_geometry` / `geometry_to_maxwell` can classify unit-cell symmetry without reimplementing crystallographic symmetry detection from scratch. Linked privately; no public header depends on it. |
+| [spglib](https://github.com/spglib/spglib) | BSD-3-Clause | `meta_atom` (`SymmetryClassifier`) | Crystal point-/space-group symmetry search, so `maxwell_to_geometry` / `geometry_to_maxwell` can classify unit-cell/meta-atom symmetry without reimplementing crystallographic symmetry detection from scratch. Linked privately; no public header depends on it. |
 | [pybind11](https://github.com/pybind/pybind11) | BSD-3-Clause | `bindings/python` | Exposes the `metaeorite::api` C++ facade as the importable `metaeorite` Python package. |
 | [Catch2](https://github.com/catchorg/Catch2) | BSL-1.0 | `tests` | Unit testing. |
 

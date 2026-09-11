@@ -53,11 +53,12 @@ if(METAEORITE_BUILD_TESTS)
 endif()
 
 # spglib provides crystal point-/space-group symmetry search (BSD-3-Clause),
-# used by metaeorite::core's SymmetryClassifier so that maxwell_to_geometry /
-# geometry_to_maxwell can classify unit-cell symmetry without reimplementing
-# crystallographic symmetry detection from scratch. Fetched with its own
-# CMake integration (not DOWNLOAD_ONLY) since it is a compiled C library;
-# its tests/install steps are disabled since we only need Spglib::symspg.
+# used by metaeorite::meta_atom's SymmetryClassifier so that
+# maxwell_to_geometry / geometry_to_maxwell can classify unit-cell/meta-atom
+# symmetry without reimplementing crystallographic symmetry detection from
+# scratch. Fetched with its own CMake integration (not DOWNLOAD_ONLY) since
+# it is a compiled C library; its tests/install steps are disabled since we
+# only need Spglib::symspg.
 CPMAddPackage(
   NAME Spglib
   GITHUB_REPOSITORY spglib/spglib

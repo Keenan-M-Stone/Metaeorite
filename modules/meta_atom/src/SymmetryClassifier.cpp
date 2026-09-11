@@ -1,10 +1,10 @@
-#include "metaeorite/core/SymmetryClassifier.hpp"
+#include "metaeorite/meta_atom/SymmetryClassifier.hpp"
 
 #include <cstddef>
 
 #include <spglib.h>
 
-namespace metaeorite::core {
+namespace metaeorite::meta_atom {
 
 SymmetryClassification classifySymmetry(const LatticeBasis& lattice, double symprec) {
     const int numAtoms = static_cast<int>(lattice.atomTypes.size());
@@ -39,4 +39,4 @@ SymmetryClassification classifySymmetry(const LatticeBasis& lattice, double symp
     return classification;
 }
 
-} // namespace metaeorite::core
+} // namespace metaeorite::meta_atom

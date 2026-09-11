@@ -31,6 +31,7 @@ include(cmake/Dependencies.cmake)
 # core::IGeometry. This keeps every module independently buildable,
 # testable, and replaceable.
 add_subdirectory(modules/core)
+add_subdirectory(modules/meta_atom)
 add_subdirectory(modules/metric_to_maxwell)
 add_subdirectory(modules/maxwell_to_metric)
 add_subdirectory(modules/maxwell_to_geometry)

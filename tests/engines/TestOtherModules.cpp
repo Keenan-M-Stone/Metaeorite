@@ -6,7 +6,9 @@
 
 #include "metaeorite/core/Geometry.hpp"
 #include "metaeorite/core/MaterialProperties.hpp"
+#include "metaeorite/geometry_to_maxwell/PlanarLaminateEngine.hpp"
 #include "metaeorite/geometry_to_maxwell/RadialLaminateEngine.hpp"
+#include "metaeorite/maxwell_to_geometry/PlanarLaminateEngine.hpp"
 #include "metaeorite/maxwell_to_geometry/RadialLaminateEngine.hpp"
 #include "metaeorite/maxwell_to_metric/TransformationOpticsMetricEngine.hpp"
 #include "metaeorite/metric_to_maxwell/TransformationOptics.hpp"
@@ -79,4 +81,40 @@ TEST_CASE("maxwell_to_geometry / geometry_to_maxwell RadialLaminateEngine round-
         REQUIRE(achieved.epsilon(0, 0).real() >= hostEpsilon);
         REQUIRE(achieved.epsilon(0, 0).real() <= inclusionEpsilon);
     }
+}
+
+TEST_CASE("maxwell_to_geometry / geometry_to_maxwell PlanarLaminateEngine round-trip",
+          "[maxwell_to_geometry][geometry_to_maxwell]") {
+    // Sibling of the radial-laminate round trip above, but for a Cartesian
+    // (flat-stack) macroscopic configuration - no cylindrical coordinates
+    // or cloak-specific setup involved, demonstrating that new topologies
+    // plug into these two modules as independent engines.
+    constexpr double hostEpsilon = 1.0;
+    constexpr double inclusionEpsilon = 10.0;
+    constexpr double targetInPlane = 3.25;
+
+    const maxwell_to_geometry::PlanarLaminateEngine synthesisEngine(hostEpsilon, inclusionEpsilon);
+    const geometry_to_maxwell::PlanarLaminateEngine homogenizationEngine;
+    core::MaterialProperties materials;
+    materials.bulkPermittivity = {inclusionEpsilon, 0.0};
+
+    core::ConstitutiveRelations target;
+    target.epsilon = core::Mat3c::Zero();
+    target.epsilon(0, 0) = targetInPlane;
+    target.epsilon(1, 1) = targetInPlane;
+    target.epsilon(2, 2) = 2.0; // arbitrary normal target; a single filling fraction cannot match both exactly
+
+    const auto synthesis = synthesisEngine.transform(target);
+    REQUIRE_FALSE(synthesis.empty());
+    const auto& geometry = synthesis.best().value;
+
+    const auto achieved = homogenizationEngine.transform(*geometry, materials);
+
+    // In-plane (epsilon_x = epsilon_y) component is solved for exactly by construction.
+    REQUIRE_THAT(achieved.epsilon(0, 0).real(), WithinAbs(targetInPlane, 1e-9));
+    REQUIRE_THAT(achieved.epsilon(1, 1).real(), WithinAbs(targetInPlane, 1e-9));
+    // Normal (epsilon_z) component is only approximate - bounded between the two
+    // constituent permittivities regardless of filling fraction.
+    REQUIRE(achieved.epsilon(2, 2).real() >= hostEpsilon);
+    REQUIRE(achieved.epsilon(2, 2).real() <= inclusionEpsilon);
 }
